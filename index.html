@@ -9,7 +9,7 @@
 <body>
   <header>
     <h1>LastTeller</h1>
-    <p>Automatisk telling av lass med GPS-geofence (uten kart)</p>
+    <p>Automatisk telling av lass med GPS-geofence (feltversjon)</p>
   </header>
 
   <main>
@@ -24,14 +24,22 @@
         <strong>Status geofence:</strong>
         <span id="geofence-status">Ukjent</span>
       </p>
+      <p>
+        <strong>Nett-status:</strong>
+        <span id="online-status">Ukjent</span>
+      </p>
     </section>
 
     <!-- GPS / posisjon -->
     <section class="card">
       <h2>GPS / posisjon</h2>
       <p id="gps-text">GPS ikke startet enda.</p>
-      <button id="gps-button" type="button">Start GPS</button>
       <p id="distance-text"></p>
+      <div class="gps-buttons">
+        <button id="gps-once-button" type="button">Hent posisjon én gang</button>
+        <button id="gps-auto-start" type="button">Start automatisk GPS</button>
+        <button id="gps-auto-stop" type="button">Stopp GPS</button>
+      </div>
     </section>
 
     <!-- Radius-innstilling -->
@@ -41,6 +49,16 @@
       <input id="radius-input" type="number" placeholder="f.eks. 80" />
       <button id="radius-button" type="button">Oppdater radius</button>
       <p>Nåværende radius: <span id="radius-display">?</span> meter</p>
+    </section>
+
+    <!-- Geofence-kontroll -->
+    <section class="card">
+      <h2>Geofence-kontroll</h2>
+      <p>
+        <strong>Senter (lagret):</strong>
+        <span id="geofence-center-display">Ikke satt</span>
+      </p>
+      <button id="reset-geofence-button" type="button">Nullstill geofence-senter</button>
     </section>
 
     <!-- Kjøretøy -->
@@ -73,14 +91,14 @@
         </thead>
         <tbody id="loads-table-body"></tbody>
       </table>
+      <button id="export-button" type="button">Eksporter til CSV</button>
     </section>
   </main>
 
   <footer>
-    <p>Feltversjon – GPS styrer geofence og lastteller, uten kart.</p>
+    <p>Feltversjon – alt lagres lokalt på enheten. Ingen kart, kun GPS og geofence.</p>
   </footer>
 
-  <!-- Vår logikk -->
   <script src="app.js"></script>
 </body>
 </html>
