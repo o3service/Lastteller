@@ -1,34 +1,67 @@
 <!DOCTYPE html>
 <html lang="no">
 <head>
-  <meta charset="UTF-8">
-  <title>LastTeller</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <title>LastTeller – Feltversjon</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </head>
 <body>
   <header>
     <h1>LastTeller</h1>
-    <p>Automatisk telling av lass med INN/UT-logikk</p>
+    <p>Automatisk telling av lass med GPS-geofence (uten kart)</p>
   </header>
 
   <main>
+    <!-- Oversikt -->
     <section class="card">
       <h2>Oversikt</h2>
-      <p><strong>Totalt antall lass:</strong> <span id="total-loads">0</span></p>
+      <p>
+        <strong>Totalt antall lass:</strong>
+        <span id="total-loads">0</span>
+      </p>
+      <p>
+        <strong>Status geofence:</strong>
+        <span id="geofence-status">Ukjent</span>
+      </p>
     </section>
 
+    <!-- GPS / posisjon -->
+    <section class="card">
+      <h2>GPS / posisjon</h2>
+      <p id="gps-text">GPS ikke startet enda.</p>
+      <button id="gps-button" type="button">Start GPS</button>
+      <p id="distance-text"></p>
+    </section>
+
+    <!-- Radius-innstilling -->
+    <section class="card">
+      <h2>Geofence-radius</h2>
+      <label for="radius-input">Radius i meter:</label>
+      <input id="radius-input" type="number" placeholder="f.eks. 80" />
+      <button id="radius-button" type="button">Oppdater radius</button>
+      <p>Nåværende radius: <span id="radius-display">?</span> meter</p>
+    </section>
+
+    <!-- Kjøretøy -->
     <section class="card">
       <h2>Kjøretøy</h2>
 
       <form id="add-vehicle-form">
         <label for="vehicle-id">Bil-ID / Reg.nr:</label>
-        <input id="vehicle-id" type="text" placeholder="f.eks. SV12345" required>
+        <input
+          id="vehicle-id"
+          type="text"
+          placeholder="f.eks. SV12345"
+          required
+        />
         <button type="submit">Legg til bil</button>
       </form>
 
       <ul id="vehicle-list"></ul>
     </section>
 
+    <!-- Registrerte lass -->
     <section class="card">
       <h2>Registrerte lass (siste 20)</h2>
       <table>
@@ -38,16 +71,16 @@
             <th>Bil</th>
           </tr>
         </thead>
-        <tbody id="loads-table-body">
-        </tbody>
+        <tbody id="loads-table-body"></tbody>
       </table>
     </section>
   </main>
 
   <footer>
-    <p>Prototype – geofence skal senere kobles til INN/UT-funksjonene i app.js</p>
+    <p>Feltversjon – GPS styrer geofence og lastteller, uten kart.</p>
   </footer>
 
+  <!-- Vår logikk -->
   <script src="app.js"></script>
 </body>
 </html>

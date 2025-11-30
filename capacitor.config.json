@@ -1,0 +1,6 @@
+{
+  "appId": "no.trakvion.lastteller",
+  "appName": "lastteller",
+  "webDir": "."
+  "bundleWebRuntime": false
+}
