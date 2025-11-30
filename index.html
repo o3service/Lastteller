@@ -2,17 +2,229 @@
 <html lang="no">
 <head>
   <meta charset="UTF-8" />
-  <title>LastTeller – Feltversjon</title>
+  <title>LastTeller + Kjørerapport</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="style.css" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Enkel stil for kjørerapport + kortlayout -->
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f3f4f6;
+      color: #111827;
+    }
+
+    .app {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+
+    h2 {
+      font-size: 1.1rem;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 0.75rem;
+      padding: 1rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.9rem;
+      margin-bottom: 0.25rem;
+      font-weight: 500;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 0.5rem 0.6rem;
+      border-radius: 0.5rem;
+      border: 1px solid #d1d5db;
+      font-size: 0.9rem;
+    }
+
+    textarea {
+      min-height: 70px;
+      resize: vertical;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .col-6 {
+      flex: 1 1 180px;
+    }
+
+    .col-4 {
+      flex: 1 1 120px;
+    }
+
+    .col-3 {
+      flex: 1 1 90px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.6rem 1rem;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .btn-primary {
+      background: #2563eb;
+      color: #ffffff;
+    }
+
+    .btn-secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .btn + .btn {
+      margin-left: 0.5rem;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .chip {
+      padding: 0.2rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .chip.selected {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+    }
+
+    .report-list {
+      max-height: 320px;
+      overflow-y: auto;
+      padding-right: 0.25rem;
+    }
+
+    .report-item {
+      border-bottom: 1px solid #e5e7eb;
+      padding: 0.5rem 0 0.75rem;
+      font-size: 0.85rem;
+    }
+
+    .report-item:last-child {
+      border-bottom: none;
+    }
+
+    .report-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+      font-weight: 600;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+
+    .muted {
+      color: #6b7280;
+      font-size: 0.8rem;
+    }
+
+    .small {
+      font-size: 0.8rem;
+    }
+
+    .gps-buttons button {
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .vehicle-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.3rem 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .vehicle-label {
+      font-weight: 500;
+    }
+
+    .vehicle-buttons button {
+      margin-left: 0.25rem;
+    }
+
+    .badge {
+      margin-left: 0.5rem;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin: 1rem 0;
+    }
+
+    @media (max-width: 640px) {
+      .card {
+        padding: 0.8rem;
+      }
+
+      .gps-buttons {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .gps-buttons button {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 <body>
-  <header>
+  <div class="app">
+    <!-- LASTTELLER-DELEN -->
     <h1>LastTeller</h1>
-    <p>Automatisk telling av lass med GPS-geofence (feltversjon)</p>
-  </header>
+    <p class="muted small" style="text-align:center;">
+      Feltversjon – GPS-geofence teller lass automatisk. Data lagres lokalt på enheten.
+    </p>
 
-  <main>
     <!-- Oversikt -->
     <section class="card">
       <h2>Oversikt</h2>
@@ -36,9 +248,9 @@
       <p id="gps-text">GPS ikke startet enda.</p>
       <p id="distance-text"></p>
       <div class="gps-buttons">
-        <button id="gps-once-button" type="button">Hent posisjon én gang</button>
-        <button id="gps-auto-start" type="button">Start automatisk GPS</button>
-        <button id="gps-auto-stop" type="button">Stopp GPS</button>
+        <button id="gps-once-button" type="button" class="btn btn-secondary">Hent posisjon én gang</button>
+        <button id="gps-auto-start" type="button" class="btn btn-secondary">Start automatisk GPS</button>
+        <button id="gps-auto-stop" type="button" class="btn btn-secondary">Stopp GPS</button>
       </div>
     </section>
 
@@ -47,7 +259,7 @@
       <h2>Geofence-radius</h2>
       <label for="radius-input">Radius i meter:</label>
       <input id="radius-input" type="number" placeholder="f.eks. 80" />
-      <button id="radius-button" type="button">Oppdater radius</button>
+      <button id="radius-button" type="button" class="btn btn-secondary">Oppdater radius</button>
       <p>Nåværende radius: <span id="radius-display">?</span> meter</p>
     </section>
 
@@ -58,7 +270,9 @@
         <strong>Senter (lagret):</strong>
         <span id="geofence-center-display">Ikke satt</span>
       </p>
-      <button id="reset-geofence-button" type="button">Nullstill geofence-senter</button>
+      <button id="reset-geofence-button" type="button" class="btn btn-secondary">
+        Nullstill geofence-senter
+      </button>
     </section>
 
     <!-- Kjøretøy -->
@@ -73,7 +287,7 @@
           placeholder="f.eks. SV12345"
           required
         />
-        <button type="submit">Legg til bil</button>
+        <button type="submit" class="btn btn-primary">Legg til bil</button>
       </form>
 
       <ul id="vehicle-list"></ul>
@@ -91,14 +305,502 @@
         </thead>
         <tbody id="loads-table-body"></tbody>
       </table>
-      <button id="export-button" type="button">Eksporter til CSV</button>
+      <button id="export-button" type="button" class="btn btn-secondary">Eksporter lass til CSV</button>
     </section>
-  </main>
+
+    <hr style="margin:2rem 0;" />
+
+    <!-- KJØRERAPPORT-DELEN -->
+    <h1>Kjørerapport</h1>
+    <p class="muted small" style="text-align:center;">
+      Fyll ut etter hver jobb. Data lagres lokalt på enheten (egen lagring).
+    </p>
+
+    <!-- SKJEMA -->
+    <form id="reportForm" class="card">
+      <h2>Oppdrag</h2>
+      <div class="row">
+        <div class="col-6">
+          <label for="date">Dato</label>
+          <input type="date" id="date" required />
+        </div>
+        <div class="col-6">
+          <label for="client">Oppdragsgiver</label>
+          <input type="text" id="client" placeholder="Firma / kunde" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-6">
+          <label for="startTime">Starttid</label>
+          <input type="time" id="startTime" required />
+        </div>
+        <div class="col-6">
+          <label for="endTime">Sluttid</label>
+          <input type="time" id="endTime" required />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-6">
+          <label for="startLocation">Startsted</label>
+          <input type="text" id="startLocation" placeholder="F.eks. Barset" />
+        </div>
+        <div class="col-6">
+          <label for="endLocation">Sluttsted</label>
+          <input type="text" id="endLocation" placeholder="F.eks. Barset" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-6">
+          <label for="deliveryLocation">Leveringssted</label>
+          <input type="text" id="deliveryLocation" placeholder="F.eks. Trondheim havn" />
+        </div>
+      </div>
+
+      <h2>Kjøretøy</h2>
+      <div class="row">
+        <div class="col-6">
+          <label for="escortReg">Følgebil reg.nr</label>
+          <input type="text" id="escortReg" placeholder="AB12345" />
+        </div>
+        <div class="col-6">
+          <label for="transportReg">Transport reg.nr</label>
+          <input type="text" id="transportReg" placeholder="F.eks. lastebil" />
+        </div>
+      </div>
+
+      <label>Transporttype</label>
+      <div id="transportTypeChips" class="chips">
+        <div class="chip" data-value="Bred last">Bred last</div>
+        <div class="chip" data-value="Lang last">Lang last</div>
+        <div class="chip" data-value="Høy last">Høy last</div>
+        <div class="chip" data-value="Tung last">Tung last</div>
+        <div class="chip" data-value="Annet">Annet</div>
+      </div>
+      <input type="hidden" id="transportType" />
+
+      <h2>Last</h2>
+      <div class="row">
+        <div class="col-6">
+          <label for="cargoDescription">Last (beskrivelse)</label>
+          <input type="text" id="cargoDescription" placeholder="F.eks. betongelement, brakke, maskin" />
+        </div>
+        <div class="col-3">
+          <label for="cargoAmount">Antall / vekt</label>
+          <input type="number" id="cargoAmount" inputmode="decimal" step="0.01" placeholder="F.eks. 12" />
+        </div>
+        <div class="col-3">
+          <label for="cargoUnit">Enhet</label>
+          <select id="cargoUnit">
+            <option value="">Velg…</option>
+            <option value="tonn">tonn</option>
+            <option value="kg">kg</option>
+            <option value="annet">annet</option>
+          </select>
+        </div>
+      </div>
+
+      <h2>Kjøring</h2>
+      <div class="row">
+        <div class="col-4">
+          <label for="odoStart">Km start</label>
+          <input type="number" id="odoStart" inputmode="decimal" />
+        </div>
+        <div class="col-4">
+          <label for="odoEnd">Km slutt</label>
+          <input type="number" id="odoEnd" inputmode="decimal" />
+        </div>
+        <div class="col-4">
+          <label for="totalKm">Totalt km (auto)</label>
+          <input type="number" id="totalKm" readonly />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-6">
+          <label for="driveTime">Kjøretid (timer:min)</label>
+          <input type="text" id="driveTime" placeholder="F.eks. 2:15" />
+        </div>
+        <div class="col-6">
+          <label for="waitTime">Ventetid (timer:min)</label>
+          <input type="text" id="waitTime" placeholder="F.eks. 0:30" />
+        </div>
+      </div>
+
+      <h2>Forhold</h2>
+      <div class="row">
+        <div class="col-6">
+          <label for="weather">Vær</label>
+          <select id="weather">
+            <option value="">Velg…</option>
+            <option>Sol</option>
+            <option>Skyet</option>
+            <option>Regn</option>
+            <option>Snø</option>
+            <option>Vind</option>
+          </select>
+        </div>
+        <div class="col-6">
+          <label for="road">Vegforhold</label>
+          <select id="road">
+            <option value="">Velg…</option>
+            <option>Tørr</option>
+            <option>Våt</option>
+            <option>Snø</option>
+            <option>Is/holke</option>
+            <option>Glatt</option>
+          </select>
+        </div>
+      </div>
+
+      <label for="incidents">Hendelser / merknader</label>
+      <textarea id="incidents" placeholder="Møtende trafikk, stopp, spesielle situasjoner…"></textarea>
+
+      <h2>Kommunikasjon</h2>
+      <div class="row">
+        <div class="col-6">
+          <label for="radioOk">Radio fungerte?</label>
+          <select id="radioOk">
+            <option value="">Velg…</option>
+            <option>Ja</option>
+            <option>Nei</option>
+          </select>
+        </div>
+        <div class="col-6">
+          <label for="coverage">Mobildekning</label>
+          <select id="coverage">
+            <option value="">Velg…</option>
+            <option>God</option>
+            <option>Middels</option>
+            <option>Dårlig</option>
+            <option>Ingen</option>
+          </select>
+        </div>
+      </div>
+
+      <label for="deviations">Avvik (skader, uhell, osv.)</label>
+      <textarea id="deviations"></textarea>
+
+      <h2>Signatur</h2>
+      <label for="driverName">Sjåfør</label>
+      <input type="text" id="driverName" placeholder="Navn" />
+
+      <div style="margin-top:1rem;">
+        <button type="submit" class="btn btn-primary">Lagre kjørerapport</button>
+        <button type="button" id="clearForm" class="btn btn-secondary">Nullstill skjema</button>
+      </div>
+    </form>
+
+    <!-- LISTE / OVERSIKT -->
+    <div class="card">
+      <h2>Registrerte kjørerapporter</h2>
+      <p class="muted small">
+        Lagres lokalt i nettleseren. Du kan eksportere til CSV for bruk i Excel/regneark.
+      </p>
+      <div style="margin-bottom:0.5rem;">
+        <button id="exportCsv" class="btn btn-secondary">Eksporter som CSV</button>
+        <button id="clearAll" class="btn btn-secondary">Slett alle rapporter</button>
+      </div>
+      <div id="reportList" class="report-list"></div>
+    </div>
+  </div>
 
   <footer>
-    <p>Feltversjon – alt lagres lokalt på enheten. Ingen kart, kun GPS og geofence.</p>
+    <p>LastTeller + Kjørerapport – alt lagres lokalt på enheten.</p>
   </footer>
 
+  <!-- LastTeller-logikken -->
   <script src="app.js"></script>
+
+  <!-- Kjørerapport-logikken (tilpasset litt, egen storage-key) -->
+  <script>
+    const REPORTS_STORAGE_KEY = "folgebil_reports_v1";
+
+    function loadReports() {
+      try {
+        const raw = localStorage.getItem(REPORTS_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        console.error("Kunne ikke lese rapporter fra localStorage", e);
+        return [];
+      }
+    }
+
+    function saveReports(reports) {
+      localStorage.setItem(REPORTS_STORAGE_KEY, JSON.stringify(reports));
+    }
+
+    function renderReports() {
+      const listEl = document.getElementById("reportList");
+      const reports = loadReports();
+      listEl.innerHTML = "";
+
+      if (reports.length === 0) {
+        listEl.innerHTML = '<p class="muted small">Ingen rapporter enda.</p>';
+        return;
+      }
+
+      reports
+        .slice()
+        .reverse()
+        .forEach((r) => {
+          const div = document.createElement("div");
+          div.className = "report-item";
+
+          const header = document.createElement("div");
+          header.className = "report-header";
+
+          const left = document.createElement("div");
+          left.textContent = `${r.date || "Ukjent dato"} – ${r.startLocation || "?"} → ${r.endLocation || "?"}`;
+
+          const right = document.createElement("div");
+          right.innerHTML =
+            `<span class="badge">${r.transportType || "Transport"}</span>`;
+
+          header.appendChild(left);
+          header.appendChild(right);
+
+          const meta = document.createElement("div");
+          meta.className = "muted";
+          meta.textContent =
+            `${r.client || "Ukjent kunde"} • ${r.totalKm || "-"} km • ` +
+            `${r.startTime || "?"} – ${r.endTime || "?"}`;
+
+          div.appendChild(header);
+          div.appendChild(meta);
+
+          if (r.deliveryLocation) {
+            const del = document.createElement("div");
+            del.className = "small muted";
+            del.textContent = `Leveringssted: ${r.deliveryLocation}`;
+            div.appendChild(del);
+          }
+
+          if (r.cargoDescription || r.cargoAmount) {
+            const cargo = document.createElement("div");
+            cargo.className = "small";
+            const parts = [];
+            if (r.cargoDescription) parts.push(r.cargoDescription);
+            if (r.cargoAmount) {
+              const unit = r.cargoUnit ? ` ${r.cargoUnit}` : "";
+              parts.push(`${r.cargoAmount}${unit}`);
+            }
+            cargo.textContent = `Last: ${parts.join(" • ")}`;
+            div.appendChild(cargo);
+          }
+
+          if (r.incidents) {
+            const inc = document.createElement("div");
+            inc.className = "small";
+            inc.textContent = `Notat: ${r.incidents}`;
+            div.appendChild(inc);
+          }
+
+          listEl.appendChild(div);
+        });
+    }
+
+    function calcTotalKm() {
+      const start = parseFloat(document.getElementById("odoStart").value);
+      const end = parseFloat(document.getElementById("odoEnd").value);
+      const totalEl = document.getElementById("totalKm");
+      if (!isNaN(start) && !isNaN(end) && end >= start) {
+        totalEl.value = (end - start).toFixed(1).replace(".0", "");
+      } else {
+        totalEl.value = "";
+      }
+    }
+
+    function setupTransportTypeChips() {
+      const chipsContainer = document.getElementById("transportTypeChips");
+      const hiddenInput = document.getElementById("transportType");
+
+      chipsContainer.addEventListener("click", (e) => {
+        const chip = e.target.closest(".chip");
+        if (!chip) return;
+
+        chipsContainer.querySelectorAll(".chip").forEach((c) => {
+          c.classList.remove("selected");
+        });
+
+        chip.classList.add("selected");
+        hiddenInput.value = chip.dataset.value;
+      });
+    }
+
+    function exportCsvReports() {
+      const reports = loadReports();
+      if (reports.length === 0) {
+        alert("Ingen rapporter å eksportere.");
+        return;
+      }
+
+      const headers = [
+        "Dato",
+        "Oppdragsgiver",
+        "Starttid",
+        "Sluttid",
+        "Startsted",
+        "Sluttsted",
+        "Leveringssted",
+        "Last",
+        "Antall",
+        "Enhet",
+        "Følgebil reg.nr",
+        "Transport reg.nr",
+        "Transporttype",
+        "Km start",
+        "Km slutt",
+        "Totalt km",
+        "Kjøretid",
+        "Ventetid",
+        "Vær",
+        "Vegforhold",
+        "Hendelser",
+        "Radio fungerte",
+        "Mobildekning",
+        "Avvik",
+        "Sjåfør"
+      ];
+
+      const rows = reports.map((r) => [
+        r.date || "",
+        r.client || "",
+        r.startTime || "",
+        r.endTime || "",
+        r.startLocation || "",
+        r.endLocation || "",
+        r.deliveryLocation || "",
+        r.cargoDescription || "",
+        r.cargoAmount || "",
+        r.cargoUnit || "",
+        r.escortReg || "",
+        r.transportReg || "",
+        r.transportType || "",
+        r.odoStart || "",
+        r.odoEnd || "",
+        r.totalKm || "",
+        r.driveTime || "",
+        r.waitTime || "",
+        r.weather || "",
+        r.road || "",
+        (r.incidents || "").replace(/\n/g, " "),
+        r.radioOk || "",
+        r.coverage || "",
+        (r.deviations || "").replace(/\n/g, " "),
+        r.driverName || ""
+      ]);
+
+      const csvLines = [];
+      csvLines.push(headers.join(";"));
+      rows.forEach((row) => {
+        const escaped = row.map((field) => {
+          const f = String(field).replace(/"/g, '""');
+          if (f.includes(";") || f.includes('"') || f.includes("\n")) {
+            return `"${f}"`;
+          }
+          return f;
+        });
+        csvLines.push(escaped.join(";"));
+      });
+
+      const blob = new Blob([csvLines.join("\n")], {
+        type: "text/csv;charset=utf-8;"
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const now = new Date();
+      const dateStr = now.toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `kjorerapporter_${dateStr}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const dateInput = document.getElementById("date");
+      if (dateInput && !dateInput.value) {
+        const today = new Date().toISOString().slice(0, 10);
+        dateInput.value = today;
+      }
+
+      setupTransportTypeChips();
+      renderReports();
+
+      document
+        .getElementById("odoStart")
+        .addEventListener("input", calcTotalKm);
+      document
+        .getElementById("odoEnd")
+        .addEventListener("input", calcTotalKm);
+
+      document
+        .getElementById("reportForm")
+        .addEventListener("submit", (e) => {
+          e.preventDefault();
+
+          const report = {
+            date: document.getElementById("date").value,
+            client: document.getElementById("client").value,
+            startTime: document.getElementById("startTime").value,
+            endTime: document.getElementById("endTime").value,
+            startLocation: document.getElementById("startLocation").value,
+            endLocation: document.getElementById("endLocation").value,
+            deliveryLocation: document.getElementById("deliveryLocation").value,
+            escortReg: document.getElementById("escortReg").value,
+            transportReg: document.getElementById("transportReg").value,
+            transportType: document.getElementById("transportType").value,
+            cargoDescription: document.getElementById("cargoDescription").value,
+            cargoAmount: document.getElementById("cargoAmount").value,
+            cargoUnit: document.getElementById("cargoUnit").value,
+            odoStart: document.getElementById("odoStart").value,
+            odoEnd: document.getElementById("odoEnd").value,
+            totalKm: document.getElementById("totalKm").value,
+            driveTime: document.getElementById("driveTime").value,
+            waitTime: document.getElementById("waitTime").value,
+            weather: document.getElementById("weather").value,
+            road: document.getElementById("road").value,
+            incidents: document.getElementById("incidents").value,
+            radioOk: document.getElementById("radioOk").value,
+            coverage: document.getElementById("coverage").value,
+            deviations: document.getElementById("deviations").value,
+            driverName: document.getElementById("driverName").value
+          };
+
+          const reports = loadReports();
+          reports.push(report);
+          saveReports(reports);
+          renderReports();
+
+          alert("Kjørerapport lagret.");
+        });
+
+      document.getElementById("clearForm").addEventListener("click", () => {
+        document.getElementById("reportForm").reset();
+        document.getElementById("totalKm").value = "";
+        document
+          .querySelectorAll("#transportTypeChips .chip")
+          .forEach((c) => c.classList.remove("selected"));
+        document.getElementById("transportType").value = "";
+      });
+
+      document.getElementById("exportCsv").addEventListener("click", exportCsvReports);
+
+      document.getElementById("clearAll").addEventListener("click", () => {
+        if (
+          confirm(
+            "Er du sikker på at du vil slette alle lagrede rapporter? Dette kan ikke angres."
+          )
+        ) {
+          saveReports([]);
+          renderReports();
+        }
+      });
+    });
+  </script>
 </body>
 </html>
