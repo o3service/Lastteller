@@ -8,18 +8,17 @@ const RADIUS_STORAGE_KEY = "lastteller_radius";
 
 // ---------- GEOFENCE-STATE ----------
 
-let geofenceCenter = null; // { lat, lng } – settes første gang vi har posisjon
+let geofenceCenter = null; 
 let geofenceRadius = DEFAULT_RADIUS_METERS;
 let isInsideGeofence = false;
 
-// GPS-watch ID for automatisk oppdatering
 let gpsWatchId = null;
 
 // ---------- LASTTELLER-STATE ----------
 
 let state = {
   vehicles: {},
-  loads: [] // { vehicleId, timestamp }
+  loads: [] 
 };
 
 // ---------- LAGRING ----------
@@ -27,9 +26,7 @@ let state = {
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      state = JSON.parse(raw);
-    }
+    if (raw) state = JSON.parse(raw);
   } catch (e) {
     console.error("Kunne ikke laste state:", e);
   }
@@ -46,10 +43,7 @@ function saveState() {
 function loadGeofenceCenterFromStorage() {
   try {
     const raw = localStorage.getItem(GEOFENCE_CENTER_STORAGE_KEY);
-    if (raw) {
-      geofenceCenter = JSON.parse(raw);
-      console.log("Geofence-senter lastet:", geofenceCenter);
-    }
+    if (raw) geofenceCenter = JSON.parse(raw);
   } catch (e) {
     console.error("Kunne ikke laste geofence-senter:", e);
   }
@@ -62,7 +56,6 @@ function saveGeofenceCenterToStorage() {
         GEOFENCE_CENTER_STORAGE_KEY,
         JSON.stringify(geofenceCenter)
       );
-      console.log("Geofence-senter lagret:", geofenceCenter);
     }
   } catch (e) {
     console.error("Kunne ikke lagre geofence-senter:", e);
@@ -72,38 +65,25 @@ function saveGeofenceCenterToStorage() {
 function resetGeofenceCenter() {
   geofenceCenter = null;
   isInsideGeofence = false;
-  try {
-    localStorage.removeItem(GEOFENCE_CENTER_STORAGE_KEY);
-  } catch (e) {
-    console.error("Kunne ikke slette geofence-senter:", e);
-  }
-  setGeofenceStatus("Senter nullstilt – gå til ønsket punkt og trykk Start GPS.");
+  localStorage.removeItem(GEOFENCE_CENTER_STORAGE_KEY);
+  setGeofenceStatus("Senter nullstilt – gå til ønsket punkt og bruk GPS-knappene.");
   setDistanceText(null);
   updateGeofenceCenterDisplay();
 }
 
-// Radius
+// ---------- RADIUS ----------
 
 function loadRadiusFromStorage() {
   try {
     const raw = localStorage.getItem(RADIUS_STORAGE_KEY);
-    if (raw) {
-      const val = parseFloat(raw);
-      if (!Number.isNaN(val) && val > 0) {
-        geofenceRadius = val;
-      }
-    }
+    if (raw) geofenceRadius = parseFloat(raw);
   } catch (e) {
     console.error("Kunne ikke laste radius:", e);
   }
 }
 
 function saveRadius() {
-  try {
-    localStorage.setItem(RADIUS_STORAGE_KEY, String(geofenceRadius));
-  } catch (e) {
-    console.error("Kunne ikke lagre radius:", e);
-  }
+  localStorage.setItem(RADIUS_STORAGE_KEY, String(geofenceRadius));
 }
 
 // ---------- UI-HJELP ----------
@@ -127,23 +107,15 @@ function updateRadiusDisplay() {
 function setDistanceText(distMeters) {
   const el = document.getElementById("distance-text");
   if (!el) return;
-  if (distMeters == null) {
-    el.textContent = "";
-  } else {
-    el.textContent = `Avstand til senter: ${distMeters.toFixed(1)} m`;
-  }
+  if (distMeters == null) el.textContent = "";
+  else el.textContent = `Avstand til senter: ${distMeters.toFixed(1)} m`;
 }
 
 function updateGeofenceCenterDisplay() {
   const el = document.getElementById("geofence-center-display");
   if (!el) return;
-  if (!geofenceCenter) {
-    el.textContent = "Ikke satt";
-  } else {
-    el.textContent = `${geofenceCenter.lat.toFixed(
-      5
-    )}, ${geofenceCenter.lng.toFixed(5)}`;
-  }
+  if (!geofenceCenter) el.textContent = "Ikke satt";
+  else el.textContent = `${geofenceCenter.lat.toFixed(5)}, ${geofenceCenter.lng.toFixed(5)}`;
 }
 
 // ---------- AVSTAND ----------
@@ -156,17 +128,15 @@ function distanceMeters(lat1, lon1, lat2, lon2) {
   const dLon = toRad(lon2 - lon1);
 
   const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.sin(dLat / 2) ** 2 +
     Math.cos(toRad(lat1)) *
       Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-
+      Math.sin(dLon / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
 
-// ---------- INN/UT-LOGIKK & LASTTELLING ----------
+// ---------- INN/UT-LOGIKK ----------
 
 function ensureVehicle(vehicleId) {
   if (!state.vehicles[vehicleId]) {
@@ -201,31 +171,38 @@ function onExitZone(vehicleId) {
 }
 
 function registerLoad(vehicleId) {
-  const load = {
+  state.loads.push({
     vehicleId,
     timestamp: new Date().toISOString()
-  };
-  state.loads.push(load);
-  if (state.loads.length > 5000) {
-    state.loads.shift();
-  }
+  });
+
+  if (state.loads.length > 5000) state.loads.shift();
+
+  saveState();
+}
+
+// ---------- SLETT KJØRETØY + IKON ----------
+
+function deleteVehicle(vehicleId) {
+  delete state.vehicles[vehicleId];
+
+  // Slett alle lass for dette kjøretøyet
+  state.loads = state.loads.filter((load) => load.vehicleId !== vehicleId);
+
+  saveState();
+  render();
 }
 
 // ---------- GEOFENCE-SJEKK ----------
 
 function checkGeofence(lat, lng) {
   if (!geofenceCenter) {
-    setGeofenceStatus("Senter ikke satt – gå til ønsket punkt og trykk Start GPS.");
+    setGeofenceStatus("Senter ikke satt – bruk GPS-knappene.");
     setDistanceText(null);
     return;
   }
 
-  const dist = distanceMeters(
-    lat,
-    lng,
-    geofenceCenter.lat,
-    geofenceCenter.lng
-  );
+  const dist = distanceMeters(lat, lng, geofenceCenter.lat, geofenceCenter.lng);
 
   setDistanceText(dist);
 
@@ -233,42 +210,30 @@ function checkGeofence(lat, lng) {
   const vehicleId = "MOBIL_1";
 
   if (nowInside && !isInsideGeofence) {
-    console.log("UTE -> INNE, registrerer lass for", vehicleId);
     onEnterZone(vehicleId);
     setGeofenceStatus("INNE i sonen");
   }
 
   if (!nowInside && isInsideGeofence) {
-    console.log("INNE -> UTE for", vehicleId);
     onExitZone(vehicleId);
     setGeofenceStatus("UTE av sonen");
-  }
-
-  if (!isInsideGeofence && !nowInside) {
-    setGeofenceStatus("UTE av sonen");
-  }
-  if (isInsideGeofence && nowInside) {
-    setGeofenceStatus("INNE i sonen");
   }
 
   isInsideGeofence = nowInside;
 }
 
-// ---------- UI-RENDERING ----------
+// ---------- RENDER UI ----------
 
 function render() {
   const totalElement = document.getElementById("total-loads");
   const vehicleList = document.getElementById("vehicle-list");
   const loadsTableBody = document.getElementById("loads-table-body");
 
-  if (!totalElement || !vehicleList || !loadsTableBody) {
-    console.warn("Mangler noen UI-elementer, sjekk index.html");
-    return;
-  }
-
-  totalElement.textContent = state.loads.length.toString();
+  totalElement.textContent = state.loads.length;
   vehicleList.innerHTML = "";
+  loadsTableBody.innerHTML = "";
 
+  // --- KJØRETØYLISTE ---
   Object.values(state.vehicles).forEach((v) => {
     const li = document.createElement("li");
     li.className = "vehicle-item";
@@ -280,22 +245,39 @@ function render() {
     const badge = document.createElement("span");
     badge.className = "badge";
     badge.textContent = v.isInside ? "INNE" : "UTE";
-
     label.appendChild(badge);
 
     const btnWrapper = document.createElement("div");
     btnWrapper.className = "vehicle-buttons";
 
+    // INN
     const enterBtn = document.createElement("button");
-    enterBtn.textContent = "Simuler INN";
+    enterBtn.textContent = "INN";
     enterBtn.addEventListener("click", () => onEnterZone(v.id));
 
+    // UTE
     const exitBtn = document.createElement("button");
-    exitBtn.textContent = "Simuler UTE";
+    exitBtn.textContent = "UTE";
     exitBtn.addEventListener("click", () => onExitZone(v.id));
+
+    // 🗑️ SLETT
+    const deleteBtn = document.createElement("button");
+    deleteBtn.innerHTML = "🗑️";
+    deleteBtn.style.background = "#990000";
+    deleteBtn.style.color = "white";
+    deleteBtn.style.fontSize = "1.1rem";
+    deleteBtn.style.borderRadius = "8px";
+    deleteBtn.style.padding = "4px 8px";
+
+    deleteBtn.addEventListener("click", () => {
+      if (confirm(`Slette kjøretøy ${v.id}?`)) {
+        deleteVehicle(v.id);
+      }
+    });
 
     btnWrapper.appendChild(enterBtn);
     btnWrapper.appendChild(exitBtn);
+    btnWrapper.appendChild(deleteBtn);
 
     li.appendChild(label);
     li.appendChild(btnWrapper);
@@ -303,76 +285,54 @@ function render() {
     vehicleList.appendChild(li);
   });
 
-  loadsTableBody.innerHTML = "";
-  const lastLoads = [...state.loads].slice(-20).reverse();
-  lastLoads.forEach((load) => {
-    const tr = document.createElement("tr");
+  // --- LASSLISTE (siste 20) ---
+  [...state.loads]
+    .slice(-20)
+    .reverse()
+    .forEach((load) => {
+      const tr = document.createElement("tr");
 
-    const tdTime = document.createElement("td");
-    const date = new Date(load.timestamp);
-    tdTime.textContent = date.toLocaleString();
+      const tdTime = document.createElement("td");
+      tdTime.textContent = new Date(load.timestamp).toLocaleString();
 
-    const tdVeh = document.createElement("td");
-    tdVeh.textContent = load.vehicleId;
+      const tdVeh = document.createElement("td");
+      tdVeh.textContent = load.vehicleId;
 
-    tr.appendChild(tdTime);
-    tr.appendChild(tdVeh);
-    loadsTableBody.appendChild(tr);
-  });
+      tr.appendChild(tdTime);
+      tr.appendChild(tdVeh);
+      loadsTableBody.appendChild(tr);
+    });
 }
 
-// ---------- SKJEMAER ----------
+// ---------- SKJEMA FOR KJØRETØY ----------
 
 function setupForm() {
   const form = document.getElementById("add-vehicle-form");
-  const input = document.getElementById("vehicle-id");
-
-  if (!form || !input) return;
-
   form.addEventListener("submit", (e) => {
     e.preventDefault();
-    const id = input.value.trim();
+    const id = document.getElementById("vehicle-id").value.trim();
     if (!id) return;
-
     ensureVehicle(id);
     saveState();
     render();
-    input.value = "";
+    form.reset();
   });
 }
+
+// ---------- RADIUSFORM ----------
 
 function setupRadiusForm() {
   const input = document.getElementById("radius-input");
   const btn = document.getElementById("radius-button");
 
-  if (!input || !btn) return;
-
   input.value = geofenceRadius;
 
   btn.addEventListener("click", () => {
     const val = parseFloat(input.value);
-
-    if (!val || val < 5) {
-      alert("Radius må være et tall over 5 meter.");
-      return;
-    }
-
+    if (!val || val < 5) return alert("Radius må være et tall over 5 meter.");
     geofenceRadius = val;
     saveRadius();
     updateRadiusDisplay();
-
-    alert("Radius oppdatert!");
-  });
-}
-
-function setupResetGeofenceButton() {
-  const btn = document.getElementById("reset-geofence-button");
-  if (!btn) return;
-
-  btn.addEventListener("click", () => {
-    if (confirm("Er du sikker på at du vil nullstille geofence-senter?")) {
-      resetGeofenceCenter();
-    }
   });
 }
 
@@ -382,22 +342,13 @@ function handlePositionUpdate(pos) {
   const lat = pos.coords.latitude;
   const lng = pos.coords.longitude;
 
-  const text = document.getElementById("gps-text");
-  if (text) {
-    text.textContent =
-      "Posisjon funnet: breddegrad " +
-      lat.toFixed(5) +
-      ", lengdegrad " +
-      lng.toFixed(5);
-  }
+  document.getElementById("gps-text").textContent =
+    `Posisjon funnet: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
 
-  // Første gang: sett geofence-senter automatisk
   if (!geofenceCenter) {
     geofenceCenter = { lat, lng };
     saveGeofenceCenterToStorage();
-    setGeofenceStatus(
-      "Senter satt her. INNE/UTE følger denne sonen."
-    );
+    setGeofenceStatus("Senter satt her.");
     updateGeofenceCenterDisplay();
   }
 
@@ -405,90 +356,41 @@ function handlePositionUpdate(pos) {
 }
 
 function setupGps() {
-  const btnOnce = document.getElementById("gps-once-button");
-  const btnAutoStart = document.getElementById("gps-auto-start");
-  const btnAutoStop = document.getElementById("gps-auto-stop");
-  const text = document.getElementById("gps-text");
-
-  if (!btnOnce || !btnAutoStart || !btnAutoStop || !text) {
-    console.warn("Fant ikke GPS-elementer i HTML");
-    return;
-  }
-
-  // Én-gangs posisjon
-  btnOnce.addEventListener("click", () => {
-    if (!navigator.geolocation) {
-      text.textContent = "Nettleseren støtter ikke GPS.";
-      return;
-    }
-
-    text.textContent = "Henter posisjon ...";
-
+  // Én gang
+  document.getElementById("gps-once-button").addEventListener("click", () => {
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        handlePositionUpdate(pos);
-      },
-      (err) => {
-        text.textContent = "Feil ved henting av posisjon: " + err.message;
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 1000
-      }
+      handlePositionUpdate,
+      (err) => alert("GPS-feil: " + err.message),
+      { enableHighAccuracy: true }
     );
   });
 
-  // Automatisk GPS (watchPosition)
-  btnAutoStart.addEventListener("click", () => {
-    if (!navigator.geolocation) {
-      text.textContent = "Nettleseren støtter ikke GPS.";
-      return;
-    }
-
-    if (gpsWatchId !== null) {
-      text.textContent = "Automatisk GPS kjører allerede.";
-      return;
-    }
-
-    text.textContent = "Starter automatisk GPS ...";
-
+  // Auto
+  document.getElementById("gps-auto-start").addEventListener("click", () => {
+    if (gpsWatchId !== null) return;
     gpsWatchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        handlePositionUpdate(pos);
-      },
-      (err) => {
-        text.textContent =
-          "Feil ved automatisk GPS: " + err.message;
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 1000
-      }
+      handlePositionUpdate,
+      (err) => alert("GPS-feil: " + err.message),
+      { enableHighAccuracy: true }
     );
   });
 
-  btnAutoStop.addEventListener("click", () => {
+  document.getElementById("gps-auto-stop").addEventListener("click", () => {
     if (gpsWatchId !== null) {
       navigator.geolocation.clearWatch(gpsWatchId);
       gpsWatchId = null;
-      text.textContent = "Automatisk GPS stoppet.";
+      document.getElementById("gps-text").textContent = "Automatisk GPS stoppet.";
     }
   });
 }
 
-// ---------- EKSPORT TIL CSV ----------
+// ---------- EKSPORT LASS ----------
 
 function setupExportButton() {
   const btn = document.getElementById("export-button");
-  if (!btn) return;
 
   btn.addEventListener("click", () => {
-    if (!state.loads.length) {
-      alert("Ingen lass registrert enda.");
-      return;
-    }
+    if (!state.loads.length) return alert("Ingen lass registrert.");
 
     const lines = ["timestamp_iso;timestamp_local;vehicle_id"];
 
@@ -507,9 +409,8 @@ function setupExportButton() {
     const a = document.createElement("a");
     a.href = url;
     a.download = "lastteller_export.csv";
-    document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
+
     URL.revokeObjectURL(url);
   });
 }
@@ -525,19 +426,10 @@ window.addEventListener("DOMContentLoaded", () => {
   render();
   setupGps();
   setupRadiusForm();
-  setupResetGeofenceButton();
   setupExportButton();
   updateRadiusDisplay();
   updateGeofenceCenterDisplay();
   setOnlineStatus();
-
-  if (!geofenceCenter) {
-    setGeofenceStatus(
-      "Senter ikke satt – gå til ønsket punkt og trykk Hent posisjon eller Start automatisk GPS."
-    );
-  } else {
-    setGeofenceStatus("Senter er lastet – INNE/UTE følger lagret sone.");
-  }
 
   window.addEventListener("online", setOnlineStatus);
   window.addEventListener("offline", setOnlineStatus);
